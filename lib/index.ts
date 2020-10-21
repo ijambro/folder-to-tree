@@ -8,9 +8,9 @@ const defaultOption: IFolder2TreeOptions = {
     ignoreFilePattern: /node_modules/,
     reachLeafNodeCallback: (leafPath: string) => leafPath,
 };
-const buildTreeModel = (linkNodeRef: IMap<Object>,
+const buildTreeModel = async (linkNodeRef: IMap<Object>,
                         currentDirName: string,
-                        options: IFolder2TreeOptions): IMap<Object>  => {
+                        options: IFolder2TreeOptions): Promise<IMap<Object>> => {
     const listStrNode: string[] = (fs.readdirSync(currentDirName, {encoding: 'utf8'}) || [])
             .filter((subFileName: string) => {
                 const isIgnorePattern: boolean = options.ignoreFilePattern.test(subFileName);
@@ -30,18 +30,18 @@ const buildTreeModel = (linkNodeRef: IMap<Object>,
             linkNodeRef[currentFileName] = subTreeNode;
             buildTreeModel(subTreeNode, currentFileAbsPath, options);
         } else {
-            linkNodeRef[currentFileName] = options.reachLeafNodeCallback(currentFileAbsPath);
+            linkNodeRef[currentFileName] = await options.reachLeafNodeCallback(currentFileAbsPath);
         }
     }
     return linkNodeRef;
 };
 
-export function folderToTree (dirName: string, options: IFolder2TreeOptions = defaultOption): undefined|IMap<Object> {
+export async function folderToTree (dirName: string, options: IFolder2TreeOptions = defaultOption): undefined|Promise<IMap<Object>> {
     const isDirNameValid: boolean = fs.existsSync(dirName);
     if (!isDirNameValid) {
         return undefined;
     } else {
         const RootNode = {};
-        return buildTreeModel(RootNode, dirName, options);
+        return await buildTreeModel(RootNode, dirName, options);
     }
 }
